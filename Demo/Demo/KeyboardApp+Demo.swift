@@ -29,7 +29,7 @@ extension KeyboardApp {
         .init(
             name: "KeyboardKit Demo",
             // licenseKey: "299B33C6-061C-4285-8189-90525BCAF098",  // Set up KeyboardKit Pro!
-            appGroupId: "group.com.keyboardkit.demo",               // Set up App Group data sync
+            appGroupId: "group.8e4b1e8266ccaad9.1",               // Set up App Group data sync
             locales: .keyboardKitSupported,                         // Set up the enabled locales
             autocomplete: .init(                                    // Set up custom autocomplete
                 // nextWordPredictionRequest: .claude(apiKey: "")   // Set up AI-based prediction (add your own key)
