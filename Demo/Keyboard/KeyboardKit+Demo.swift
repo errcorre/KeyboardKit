@@ -26,13 +26,13 @@ extension KeyboardLayout {
 
             let inputWidth = KeyboardLayoutItem.Width.input
 
-            let row1Items: [KeyboardLayoutItem] = row1.map { char in
+            layout.itemRows[0] = row1.map { char in
                 var item = layout.createIdealItem(for: .character(char))
                 item.size.width = inputWidth
                 return item
             }
 
-            let row2Items: [KeyboardLayoutItem] = row2.map { char in
+            layout.itemRows[1] = row2.map { char in
                 var item = layout.createIdealItem(for: .character(char))
                 item.size.width = inputWidth
                 return item
@@ -54,28 +54,24 @@ extension KeyboardLayout {
                 b.size.width = inputWidth
                 row3Items.append(b)
             }
-
-            layout.itemRows[0] = row1Items
-            layout.itemRows[1] = row2Items
             layout.itemRows[2] = row3Items
         }
 
-        // 2. Вставляем кнопку Глобуса в нижний ряд справа от "123" (или "ABC")
+        // 2. Вставка ГЛОБУСА в нижний ряд (кастомное действие, которое iOS не скроет)
         if let bottomRowIndex = layout.itemRows.indices.last {
             var bottomRow = layout.itemRows[bottomRowIndex]
 
-            // Убираем старую кнопку глобуса, если она где-то уже стояла
-            bottomRow.removeAll { $0.action == .nextKeyboard || $0.action == .nextLocale }
+            // Убираем старые глобусы/переключатели, если они где-то есть
+            bottomRow.removeAll {
+                if case .custom(let name) = $0.action, name == "change_lang" { return true }
+                return $0.action == .nextKeyboard || $0.action == .nextLocale
+            }
 
-            // Ищем кнопку 123 (или ABC в режиме цифр)
-            if let keyboardTypeIndex = bottomRow.firstIndex(where: {
-                if case .keyboardType = $0.action { return true }
-                return false
-            }) {
-                var globeItem = layout.createIdealItem(for: .nextLocale)
+            // Находим позицию пробела и вставляем глобус прямо перед ним (справа от 123)
+            if let spaceIndex = bottomRow.firstIndex(where: { $0.action == .space }) {
+                var globeItem = layout.createIdealItem(for: .custom(named: "change_lang"))
                 globeItem.size.width = KeyboardLayoutItem.Width.input
-                // Вставляем сразу справа от 123
-                bottomRow.insert(globeItem, at: keyboardTypeIndex + 1)
+                bottomRow.insert(globeItem, at: spaceIndex)
             }
 
             layout.itemRows[bottomRowIndex] = bottomRow

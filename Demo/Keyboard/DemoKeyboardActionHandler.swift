@@ -1,14 +1,8 @@
-//
-//  DemoKeyboardActionHandler.swift
-//  KeyboardPro
-//
-
 import KeyboardKit
 import UIKit
 
 class DemoKeyboardActionHandler: StandardKeyboardActionHandler {
 
-    // MARK: - Controller & Proxy
     static weak var inputController: UIInputViewController?
 
     private var textProxy: UITextDocumentProxy? {
@@ -16,16 +10,16 @@ class DemoKeyboardActionHandler: StandardKeyboardActionHandler {
     }
 
     // MARK: - Gesture Settings & Thresholds
-    /// Дистанция до середины клавиатуры/пробела, до которой свайп игнорируется
+    /// Свайп влево начинает удалять слова только после преодоления 160pt (середина пробела)
     private static let activationThreshold: CGFloat = 160
 
-    /// Шаг свайпа для удаления одного слова (чем больше число, тем медленнее удаляет)
+    /// Шаг удаления слов (чем выше число, тем плавнее удаление)
     private static let wordDeleteStepWidth: CGFloat = 45
 
-    /// Дистанция до левой четверти экрана, где начинается удаление предложений
+    /// Дистанция до левой четверти экрана, где включается удаление предложений
     private static let sentenceDistanceThreshold: CGFloat = 280
 
-    /// Шаг свайпа для удаления предложений
+    /// Шаг удаления предложений
     private static let sentenceDeleteStepWidth: CGFloat = 60
 
     // MARK: - Gesture State
@@ -40,11 +34,13 @@ class DemoKeyboardActionHandler: StandardKeyboardActionHandler {
         for gesture: Keyboard.Gesture,
         on action: KeyboardAction
     ) -> KeyboardAction.GestureAction? {
-        // Мгновенное переключение языков En <-> Ru по тапу на глобус
-        if gesture == .release, action == .nextKeyboard || action == .nextLocale {
-            return { [weak self] _ in
-                guard let context = self?.keyboardContext else { return }
-                context.selectNextLocale()
+        // Мгновенное переключение языка En <-> Ru по нажатию на наш глобус
+        if gesture == .release {
+            if case .custom(let name) = action, name == "change_lang" {
+                return { [weak self] _ in
+                    guard let context = self?.keyboardContext else { return }
+                    context.selectNextLocale()
+                }
             }
         }
 
@@ -58,22 +54,16 @@ class DemoKeyboardActionHandler: StandardKeyboardActionHandler {
 
     func longPressAction(for action: KeyboardAction) -> KeyboardAction.GestureAction? {
         switch action {
-        case .image(_, _, let imageName): 
-            return { [weak self] _ in self?.saveImage(named: imageName) }
-        default: 
-            return nil
+        case .image(_, _, let imageName): return { [weak self] _ in self?.saveImage(named: imageName) }
+        default: return nil
         }
     }
 
     func releaseAction(for action: KeyboardAction) -> KeyboardAction.GestureAction? {
-        // Сбрасываем жест удаления при отпускании любой клавиши
         resetBackspaceDragState()
-
         switch action {
-        case .image(_, _, let imageName): 
-            return { [weak self] _ in self?.copyImage(named: imageName) }
-        default: 
-            return nil
+        case .image(_, _, let imageName): return { [weak self] _ in self?.copyImage(named: imageName) }
+        default: return nil
         }
     }
 
@@ -87,13 +77,12 @@ class DemoKeyboardActionHandler: StandardKeyboardActionHandler {
             return
         }
 
-        // Обнаружение нового жеста
         if backspaceDragStart != startLocation {
             resetBackspaceDragState()
             backspaceDragStart = startLocation
         }
 
-        let distance = startLocation.x - currentLocation.x // свайп влево > 0
+        let distance = startLocation.x - currentLocation.x // свайп влево
 
         // 1. Не удаляем ничего, пока свайп не дошёл до середины пробела
         guard distance >= Self.activationThreshold else {
@@ -102,15 +91,14 @@ class DemoKeyboardActionHandler: StandardKeyboardActionHandler {
             return
         }
 
-        // 2. Перезапуск таймера на 2 секунды покоя для включения удаления предложений
+        // 2. Таймер на 2 секунды удержания для переключения в режим предложений
         restartHoldTimer()
 
-        // 3. Проверяем, перешли ли в режим предложений по расстоянию (1/4 клавиатуры)
+        // 3. Переход в режим предложений по расстоянию (1/4 клавиатуры)
         if distance >= Self.sentenceDistanceThreshold {
             isSentenceMode = true
         }
 
-        // 4. Расчёт шагов
         let activeDistance = distance - Self.activationThreshold
         let stepWidth = isSentenceMode ? Self.sentenceDeleteStepWidth : Self.wordDeleteStepWidth
         let totalSteps = Int(activeDistance / stepWidth)
@@ -128,8 +116,6 @@ class DemoKeyboardActionHandler: StandardKeyboardActionHandler {
         }
     }
 
-    // MARK: - Private Timer & Reset Helpers
-
     private func resetBackspaceDragState() {
         backspaceDragStart = nil
         backspaceDragStepsTriggered = 0
@@ -140,11 +126,9 @@ class DemoKeyboardActionHandler: StandardKeyboardActionHandler {
 
     private func restartHoldTimer() {
         holdTimer?.invalidate()
-        // Если палец задержался на месте после середины пробела на 2 сек:
         holdTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { [weak self] _ in
             guard let self = self else { return }
             self.isSentenceMode = true
-            // Удаляем сразу предложение при срабатывании таймера
             self.deleteCurrentSentence()
         }
     }
