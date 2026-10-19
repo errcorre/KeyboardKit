@@ -38,7 +38,9 @@ struct DemoKeyboardView: View {
             emojiKeyboard: { $0.view },
             toolbar: { _ in EmptyView() }
         )
-        // Только боковые системные отступы (без сжимающего верха и низа)
+        // 33 px между рядами из Фотошопа (33 / 3 = 11 pt)
+        .environment(\.keyboardRowSpacing, 11)
+        // Системный боковой отступ
         .padding(.horizontal, 3)
     }
 }
