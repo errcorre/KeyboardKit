@@ -37,7 +37,7 @@ class KeyboardViewController: KeyboardInputViewController {
             for: .keyboardKitDemo,
             hostApplicationResolver: pluginHostApplicationResolver
         ) { _ in }
-    }
+    }   
 
     /// This function is called when the controller needs to
     /// redraw the keyboard view, and is where you can setup
@@ -69,10 +69,16 @@ private extension KeyboardViewController {
             Locale(identifier: "en"),
             Locale(identifier: "ru")
         ]
+        // Подключаем наш кастомный раскладчик
+        services.layoutService = DemoLayoutService()
         
         /// 💡 Set up which locale to use to present locales.
         state.keyboardContext.locale = Locale(identifier: "en")
         state.keyboardContext.localePresentationLocale = .current
+
+        // Регистр по умолчанию — строчные (маленькие буквы)
+        state.keyboardContext.keyboardCase = .lowercased
+
         // 2. Поведение пробела и курсора
         state.keyboardSettings.spacebarLongPressBehavior = .moveInputCursor
         state.keyboardSettings.spacebarMenuTrailing = nil // убираем лишние иконки с пробела

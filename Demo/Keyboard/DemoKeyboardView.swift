@@ -8,11 +8,11 @@ struct DemoKeyboardView: View {
 
     var body: some View {
         KeyboardView(
-            layout: .demoLayout(for: state.keyboardContext),
-            services: services
+            services: services,
+            // Скрываем громоздкую верхнюю панель подсказок (EmptyView)
+            toolbar: { _ in EmptyView() }
         )
-        // Системные отступы оригинальной клавиатуры iOS
+        // Только боковые отступы (без верха и низа)
         .padding(.horizontal, 3)
-        .padding(.bottom, 4)
     }
 }
