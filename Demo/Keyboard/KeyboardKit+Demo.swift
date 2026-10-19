@@ -8,7 +8,9 @@ extension KeyboardLayout {
     ) -> KeyboardLayout {
         var layout = KeyboardLayout.standard(for: context)
 
-        // 1. Русская раскладка (если активен русский язык и алфавитный режим)
+        let inputWidth = KeyboardLayoutItem.Width.input
+
+        // 1. Русская раскладка (если активен русский язык и буквы)
         if context.locale.identifier.hasPrefix("ru") && context.keyboardType.isAlphabetic {
             let isUpper = (context.keyboardCase == .uppercased || context.keyboardCase == .capsLocked)
 
@@ -23,8 +25,6 @@ extension KeyboardLayout {
             let row3 = isUpper
                 ? ["Я", "Ч", "С", "М", "И", "Т", "Ь", "Б", "Ю"]
                 : ["я", "ч", "с", "м", "и", "т", "ь", "б", "ю"]
-
-            let inputWidth = KeyboardLayoutItem.Width.input
 
             layout.itemRows[0] = row1.map { char in
                 var item = layout.createIdealItem(for: .character(char))
@@ -57,24 +57,31 @@ extension KeyboardLayout {
             layout.itemRows[2] = row3Items
         }
 
-        // 2. Вставка ГЛОБУСА в нижний ряд (кастомное действие, которое iOS не скроет)
+        // 2. Вставка ГЛОБУСА справа от 123
         if let bottomRowIndex = layout.itemRows.indices.last {
             var bottomRow = layout.itemRows[bottomRowIndex]
 
-            // Убираем старые глобусы/переключатели, если они где-то есть
             bottomRow.removeAll {
                 if case .custom(let name) = $0.action, name == "change_lang" { return true }
                 return $0.action == .nextKeyboard || $0.action == .nextLocale
             }
 
-            // Находим позицию пробела и вставляем глобус прямо перед ним (справа от 123)
             if let spaceIndex = bottomRow.firstIndex(where: { $0.action == .space }) {
                 var globeItem = layout.createIdealItem(for: .custom(named: "change_lang"))
-                globeItem.size.width = KeyboardLayoutItem.Width.input
+                globeItem.size.width = inputWidth
                 bottomRow.insert(globeItem, at: spaceIndex)
             }
 
             layout.itemRows[bottomRowIndex] = bottomRow
+        }
+
+        // 3. Подрезаем высоту ВСЕХ клавиш (включая пробел, буквы, цифры) на 6 pt
+        for rowIndex in layout.itemRows.indices {
+            for itemIndex in layout.itemRows[rowIndex].indices {
+                // Вычитаем 6 пикселей из стандартной высоты строки
+                let currentHeight = layout.itemRows[rowIndex][itemIndex].size.height
+                layout.itemRows[rowIndex][itemIndex].size.height = max(currentHeight - 6, 36)
+            }
         }
 
         return layout

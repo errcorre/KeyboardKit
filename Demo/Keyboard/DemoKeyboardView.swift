@@ -13,15 +13,15 @@ struct DemoKeyboardView: View {
             layout: .demoLayout(for: keyboardContext),
             services: services,
             buttonContent: { params in
-                // 1. Иконка глобуса
+                // Иконка глобуса
                 if case .custom(let name) = params.item.action, name == "change_lang" {
                     return AnyView(
                         Image(systemName: "globe")
                             .font(.title3)
                     )
                 }
-                
-                // 2. Нативная надпись на пробеле в зависимости от языка
+
+                // Надпись на пробеле
                 if params.item.action == .space {
                     let isRussian = keyboardContext.locale.identifier.hasPrefix("ru")
                     return AnyView(
@@ -33,11 +33,18 @@ struct DemoKeyboardView: View {
 
                 return AnyView(params.view)
             },
-            buttonView: { $0.view },
+            buttonView: { params in
+                // Адаптируем скругление под уменьшенную высоту
+                params.view
+                    .cornerRadius(4.6)
+            },
             collapsedView: { $0.view },
             emojiKeyboard: { $0.view },
             toolbar: { _ in EmptyView() }
         )
+        // Сдвигаем на 4 пикселя вниз
+        .padding(.top, 4)
+        // Системный отступ по бокам
         .padding(.horizontal, 3)
     }
 }
