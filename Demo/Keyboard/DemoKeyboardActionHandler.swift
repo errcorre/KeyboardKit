@@ -2,70 +2,75 @@
 //  DemoKeyboardActionHandler.swift
 //  KeyboardPro
 //
-//  Created by Daniel Saidi on 2021-02-11.
-//  Copyright © 2021-2026 Kankoda. All rights reserved.
-//
 
 import KeyboardKit
 import UIKit
 
-/// This action handler inherits the standard action handler
-/// and makes demo-specific adjustments to it.
 class DemoKeyboardActionHandler: StandardKeyboardActionHandler {
 
-    /// Trigger custom actions for `.image` keyboard actions.
+    // MARK: - Controller & Proxy
+    static weak var inputController: UIInputViewController?
+
+    private var textProxy: UITextDocumentProxy? {
+        Self.inputController?.textDocumentProxy
+    }
+
+    // MARK: - Gesture Settings & Thresholds
+    /// Дистанция до середины клавиатуры/пробела, до которой свайп игнорируется
+    private static let activationThreshold: CGFloat = 160
+
+    /// Шаг свайпа для удаления одного слова (чем больше число, тем медленнее удаляет)
+    private static let wordDeleteStepWidth: CGFloat = 45
+
+    /// Дистанция до левой четверти экрана, где начинается удаление предложений
+    private static let sentenceDistanceThreshold: CGFloat = 280
+
+    /// Шаг свайпа для удаления предложений
+    private static let sentenceDeleteStepWidth: CGFloat = 60
+
+    // MARK: - Gesture State
+    private var backspaceDragStart: CGPoint?
+    private var backspaceDragStepsTriggered = 0
+    private var isSentenceMode = false
+    private var holdTimer: Timer?
+
+    // MARK: - Overrides
+
     override func action(
         for gesture: Keyboard.Gesture,
         on action: KeyboardAction
     ) -> KeyboardAction.GestureAction? {
         let standard = super.action(for: gesture, on: action)
         switch gesture {
-        case .longPress: return longPressAction(for: action) ?? standard
-        case .release: return releaseAction(for: action) ?? standard
-        default: return standard
+        case .longPress: 
+            return longPressAction(for: action) ?? standard
+        case .release: 
+            return releaseAction(for: action) ?? standard
+        default: 
+            return standard
         }
     }
-    
-    /// Save an image to Photos when you long press it.
-    func longPressAction(
-        for action: KeyboardAction
-    ) -> KeyboardAction.GestureAction? {
+
+    func longPressAction(for action: KeyboardAction) -> KeyboardAction.GestureAction? {
         switch action {
-        case .image(_, _, let imageName): { [weak self] _ in self?.saveImage(named: imageName) }
-        default: nil
+        case .image(_, _, let imageName): 
+            return { [weak self] _ in self?.saveImage(named: imageName) }
+        default: 
+            return nil
         }
     }
 
-    /// Copy an image to the pasteboard when you tap it.
-    func releaseAction(
-        for action: KeyboardAction
-    ) -> KeyboardAction.GestureAction? {
+    func releaseAction(for action: KeyboardAction) -> KeyboardAction.GestureAction? {
+        // Сбрасываем жест удаления при отпускании любой клавиши
+        resetBackspaceDragState()
+
         switch action {
-        case .image(_, _, let imageName): { [weak self] _ in self?.copyImage(named: imageName) }
-        default: nil
+        case .image(_, _, let imageName): 
+            return { [weak self] _ in self?.copyImage(named: imageName) }
+        default: 
+            return nil
         }
     }
-
-
-    // MARK: - Swipe-to-delete on backspace
-    /// Контроллер клавиатуры, из которого берём textDocumentProxy.
-    /// Выставляется в KeyboardViewController.
-    static weak var inputController: UIInputViewController?
-
-    private var textProxy: UITextDocumentProxy? {
-        Self.inputController?.textDocumentProxy
-    }    
-    /// How many points of leftward drag trigger the next deletion step.
-    private static let wordDeleteStepWidth: CGFloat = 25
-
-    /// Past this cumulative drag distance, each further step deletes a
-    /// whole sentence instead of a single word.
-    private static let sentenceModeThreshold: CGFloat = 180
-
-    /// How many deletion "steps" we've already performed for the drag
-    /// gesture currently in progress. Reset whenever a new drag begins.
-    private var backspaceDragStepsTriggered = 0
-    private var backspaceDragStart: CGPoint?
 
     override func handleDrag(
         on action: KeyboardAction,
@@ -73,73 +78,81 @@ class DemoKeyboardActionHandler: StandardKeyboardActionHandler {
         to currentLocation: CGPoint
     ) {
         guard action == .backspace else {
-            return super.handleDrag(on: action, from: startLocation, to: currentLocation)
+            super.handleDrag(on: action, from: startLocation, to: currentLocation)
+            return
         }
 
-        // Detect a fresh drag gesture (a new press+drag) vs. continuation
-        // of the one in progress, so we don't reset step counting mid-swipe.
+        // Обнаружение нового жеста
         if backspaceDragStart != startLocation {
+            resetBackspaceDragState()
             backspaceDragStart = startLocation
-            backspaceDragStepsTriggered = 0
         }
 
-        let distance = startLocation.x - currentLocation.x // swiping LEFT is positive
-        guard distance > 0 else { return }
+        let distance = startLocation.x - currentLocation.x // свайп влево > 0
 
-        let wordSteps = Int(Self.sentenceModeThreshold / Self.wordDeleteStepWidth)
-        let stepsForDistance: Int
-        if distance < Self.sentenceModeThreshold {
-            stepsForDistance = Int(distance / Self.wordDeleteStepWidth)
-        } else {
-            let extraDistance = distance - Self.sentenceModeThreshold
-            let extraSteps = Int(extraDistance / (Self.wordDeleteStepWidth * 3))
-            stepsForDistance = wordSteps + extraSteps
+        // 1. Не удаляем ничего, пока свайп не дошёл до середины пробела
+        guard distance >= Self.activationThreshold else {
+            holdTimer?.invalidate()
+            holdTimer = nil
+            return
         }
 
-        guard stepsForDistance > backspaceDragStepsTriggered else { return }
-        let newSteps = stepsForDistance - backspaceDragStepsTriggered
-        backspaceDragStepsTriggered = stepsForDistance
+        // 2. Перезапуск таймера на 2 секунды покоя для включения удаления предложений
+        restartHoldTimer()
+
+        // 3. Проверяем, перешли ли в режим предложений по расстоянию (1/4 клавиатуры)
+        if distance >= Self.sentenceDistanceThreshold {
+            isSentenceMode = true
+        }
+
+        // 4. Расчёт шагов
+        let activeDistance = distance - Self.activationThreshold
+        let stepWidth = isSentenceMode ? Self.sentenceDeleteStepWidth : Self.wordDeleteStepWidth
+        let totalSteps = Int(activeDistance / stepWidth)
+
+        guard totalSteps > backspaceDragStepsTriggered else { return }
+        let newSteps = totalSteps - backspaceDragStepsTriggered
+        backspaceDragStepsTriggered = totalSteps
 
         for _ in 0..<newSteps {
-            if distance >= Self.sentenceModeThreshold {
+            if isSentenceMode {
                 deleteCurrentSentence()
             } else {
                 deleteCurrentWord()
             }
         }
     }
+
+    // MARK: - Private Timer & Reset Helpers
+
+    private func resetBackspaceDragState() {
+        backspaceDragStart = nil
+        backspaceDragStepsTriggered = 0
+        isSentenceMode = false
+        holdTimer?.invalidate()
+        holdTimer = nil
+    }
+
+    private func restartHoldTimer() {
+        holdTimer?.invalidate()
+        // Если палец задержался на месте после середины пробела на 2 сек:
+        holdTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { [weak self] _ in
+            guard let self = self else { return }
+            self.isSentenceMode = true
+            // Удаляем сразу предложение при срабатывании таймера
+            self.deleteCurrentSentence()
+        }
+    }
 }
 
+// MARK: - Deletion Logic & Helpers
 private extension DemoKeyboardActionHandler {
 
-    func alert(_ message: String) {
-        print("Implement alert functionality if you want.")
-    }
-
-    func copyImage(named imageName: String) {
-        guard let image = UIImage(named: imageName) else { return }
-        guard keyboardContext.hasFullAccess else { return alert("You must enable full access to copy images.") }
-        guard image.copyToPasteboard() else { return alert("The image could not be copied.") }
-        alert("Copied to pasteboard!")
-    }
-    func handleImageDidSave(withError error: Error?) {
-        if error == nil { alert("Saved!") }
-        else { alert("Failed!") }
-    }
-
-    func saveImage(named imageName: String) {
-        guard let image = UIImage(named: imageName) else { return }
-        guard keyboardContext.hasFullAccess else { return alert("You must enable full access to save images.") }
-        image.saveToPhotos(completion: handleImageDidSave)
-        alert("Saved to photos!")
-    }
-
-     /// Deletes the word immediately before the cursor, including any
-    /// trailing whitespace right before it.
     func deleteCurrentWord() {
         guard let proxy = textProxy else { return }
         guard var text = proxy.documentContextBeforeInput, !text.isEmpty else {
-            return proxy.deleteBackward()
+            proxy.deleteBackward()
+            return
         }
 
         var deletions = 0
@@ -152,17 +165,20 @@ private extension DemoKeyboardActionHandler {
             deletions += 1
         }
 
-        guard deletions > 0 else { return proxy.deleteBackward() }
-        for _ in 0..<deletions { proxy.deleteBackward() }
+        guard deletions > 0 else {
+            proxy.deleteBackward()
+            return
+        }
+        for _ in 0..<deletions {
+            proxy.deleteBackward()
+        }
     }
 
-    /// Deletes back to the start of the current sentence (the last
-    /// `.`, `!`, `?` or newline before the cursor), or to the start
-    /// of the text if there is no earlier sentence boundary.
     func deleteCurrentSentence() {
         guard let proxy = textProxy else { return }
         guard var text = proxy.documentContextBeforeInput, !text.isEmpty else {
-            return proxy.deleteBackward()
+            proxy.deleteBackward()
+            return
         }
 
         let sentenceEnders: Set<Character> = [".", "!", "?", "\n"]
@@ -176,44 +192,60 @@ private extension DemoKeyboardActionHandler {
             deletions += 1
         }
 
-        guard deletions > 0 else { return proxy.deleteBackward() }
-        for _ in 0..<deletions { proxy.deleteBackward() }
+        guard deletions > 0 else {
+            proxy.deleteBackward()
+            return
+        }
+        for _ in 0..<deletions {
+            proxy.deleteBackward()
+        }
+    }
+
+    func alert(_ message: String) {
+        print(message)
+    }
+
+    func copyImage(named imageName: String) {
+        guard let image = UIImage(named: imageName) else { return }
+        guard keyboardContext.hasFullAccess else { return alert("You must enable full access to copy images.") }
+        guard image.copyToPasteboard() else { return alert("The image could not be copied.") }
+        alert("Copied to pasteboard!")
+    }
+
+    func saveImage(named imageName: String) {
+        guard let image = UIImage(named: imageName) else { return }
+        guard keyboardContext.hasFullAccess else { return alert("You must enable full access to save images.") }
+        image.saveToPhotos { [weak self] error in
+            if error == nil { self?.alert("Saved!") }
+            else { self?.alert("Failed!") }
+        }
     }
 }
 
 private extension UIImage {
-    
     func copyToPasteboard(_ pasteboard: UIPasteboard = .general) -> Bool {
         guard let data = pngData() else { return false }
         pasteboard.setData(data, forPasteboardType: "public.png")
         return true
     }
-}
 
-private extension UIImage {
-    
     func saveToPhotos(completion: @escaping (Error?) -> Void) {
         ImageService.default.saveImageToPhotos(self, completion: completion)
     }
 }
 
-
-/// This class is used as target by the extension above.
 private class ImageService: NSObject {
-    
-    public typealias Completion = (Error?) -> Void
-
-    public static private(set) var `default` = ImageService()
-    
+    typealias Completion = (Error?) -> Void
+    static let `default` = ImageService()
     private var completions = [Completion]()
-    
-    public func saveImageToPhotos(_ image: UIImage, completion: @escaping (Error?) -> Void) {
+
+    func saveImageToPhotos(_ image: UIImage, completion: @escaping (Error?) -> Void) {
         completions.append(completion)
         UIImageWriteToSavedPhotosAlbum(image, self, #selector(saveImageToPhotosDidComplete), nil)
     }
-    
+
     @objc func saveImageToPhotosDidComplete(_ image: UIImage, error: NSError?, contextInfo: UnsafeRawPointer) {
-        guard completions.count > 0 else { return }
+        guard !completions.isEmpty else { return }
         completions.removeFirst()(error)
     }
 }
