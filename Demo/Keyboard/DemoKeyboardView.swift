@@ -14,18 +14,20 @@ struct DemoKeyboardView: View {
             layout: .demoLayout(for: keyboardContext),
             services: services,
             buttonContent: { params in
-                // Отрисовка системной иконки глобуса для нашей кастомной кнопки
-                if case .custom(let name) = params.action, name == "change_lang" {
-                    Image(systemName: "globe")
-                        .font(.title3)
+                // Достаём action из params.item
+                if case .custom(let name) = params.item.action, name == "change_lang" {
+                    AnyView(
+                        Image(systemName: "globe")
+                            .font(.title3)
+                    )
                 } else {
-                    params.view
+                    AnyView(params.view)
                 }
             },
             buttonView: { $0.view },
             collapsedView: { $0.view },
             emojiKeyboard: { $0.view },
-            toolbar: { _ in EmptyView() } // Скрываем громоздкую верхнюю панель подсказок
+            toolbar: { _ in EmptyView() } // Скрываем верхнюю панель подсказок
         )
         // Системный отступ только слева и справа
         .padding(.horizontal, 3)
