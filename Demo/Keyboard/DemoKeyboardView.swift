@@ -6,7 +6,6 @@ struct DemoKeyboardView: View {
     var services: KeyboardServices
     var state: KeyboardState
 
-    // 💡 Реагирует на нажатие Shift, 123 и смену языка через глобус
     @EnvironmentObject var keyboardContext: KeyboardContext
 
     var body: some View {
@@ -14,22 +13,31 @@ struct DemoKeyboardView: View {
             layout: .demoLayout(for: keyboardContext),
             services: services,
             buttonContent: { params in
-                // Достаём action из params.item
+                // 1. Иконка глобуса
                 if case .custom(let name) = params.item.action, name == "change_lang" {
-                    AnyView(
+                    return AnyView(
                         Image(systemName: "globe")
                             .font(.title3)
                     )
-                } else {
-                    AnyView(params.view)
                 }
+                
+                // 2. Нативная надпись на пробеле в зависимости от языка
+                if params.item.action == .space {
+                    let isRussian = keyboardContext.locale.identifier.hasPrefix("ru")
+                    return AnyView(
+                        Text(isRussian ? "пробел" : "space")
+                            .font(.callout)
+                            .opacity(0.6)
+                    )
+                }
+
+                return AnyView(params.view)
             },
             buttonView: { $0.view },
             collapsedView: { $0.view },
             emojiKeyboard: { $0.view },
-            toolbar: { _ in EmptyView() } // Скрываем верхнюю панель подсказок
+            toolbar: { _ in EmptyView() }
         )
-        // Системный отступ только слева и справа
         .padding(.horizontal, 3)
     }
 }

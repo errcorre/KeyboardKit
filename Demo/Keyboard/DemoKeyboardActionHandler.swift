@@ -34,12 +34,13 @@ class DemoKeyboardActionHandler: StandardKeyboardActionHandler {
         for gesture: Keyboard.Gesture,
         on action: KeyboardAction
     ) -> KeyboardAction.GestureAction? {
-        // Мгновенное переключение языка En <-> Ru по нажатию на наш глобус
+        // Железный переключатель языка En <-> Ru по нажатию на глобус
         if gesture == .release {
             if case .custom(let name) = action, name == "change_lang" {
                 return { [weak self] _ in
                     guard let context = self?.keyboardContext else { return }
-                    context.selectNextLocale()
+                    let isRussian = context.locale.identifier.hasPrefix("ru")
+                    context.locale = Locale(identifier: isRussian ? "en_US" : "ru_RU")
                 }
             }
         }
