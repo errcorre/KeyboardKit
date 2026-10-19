@@ -57,8 +57,8 @@ private extension KeyboardViewController {
 
     /// Make demo-specific changes to your keyboard services.
     func setupDemoServices() {
-        DemoKeyboardActionHandler.inputController = self    // <-- нужно для textDocumentProxy
-        services.actionHandler = DemoKeyboardActionHandler( // <-- 💡 Set up a demo-specific action handler.
+        DemoKeyboardActionHandler.inputController = self
+        services.actionHandler = DemoKeyboardActionHandler(
             controller: self
         )
     }
@@ -69,21 +69,10 @@ private extension KeyboardViewController {
             Locale(identifier: "en"),
             Locale(identifier: "ru")
         ]
-        // Подключаем наш кастомный раскладчик
-        services.layoutService = DemoLayoutService()
-        
-        /// 💡 Set up which locale to use to present locales.
         state.keyboardContext.locale = Locale(identifier: "en")
         state.keyboardContext.localePresentationLocale = .current
 
-        // Регистр по умолчанию — строчные (маленькие буквы)
-        state.keyboardContext.keyboardCase = .lowercased
-
-        // 2. Поведение пробела и курсора
         state.keyboardSettings.spacebarLongPressBehavior = .moveInputCursor
-        state.keyboardSettings.spacebarMenuTrailing = nil // убираем лишние иконки с пробела
-
-        // 3. Автокомплит
-        state.autocompleteSettings.isAutocorrectEnabled = true
+        state.keyboardSettings.spacebarMenuTrailing = nil
     }
 }

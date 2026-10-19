@@ -1,18 +1,20 @@
 import Foundation
 import KeyboardKit
 
-/// Кастомный сервис раскладки, который на лету генерирует русскую раскладку
-class DemoLayoutService: KeyboardLayout.StandardService {
+extension KeyboardLayout {
 
-    override func keyboardLayout(for context: KeyboardContext) -> KeyboardLayout {
-        var layout = super.keyboardLayout(for: context)
+    static func demoLayout(
+        for context: KeyboardContext
+    ) -> KeyboardLayout {
+        var layout = KeyboardLayout.standard(for: context)
 
-        // Подменяем буквы только если активен русский язык и алфавитный режим
+        // Если режим цифр/символов (123) или язык не русский — отдаём стандартный лейаут
         guard context.locale.identifier.hasPrefix("ru"),
               context.keyboardType.isAlphabetic else {
             return layout
         }
 
+        // Проверяем Shift
         let isUpper = (context.keyboardCase == .uppercased || context.keyboardCase == .capsLocked)
 
         let row1 = isUpper
@@ -29,21 +31,18 @@ class DemoLayoutService: KeyboardLayout.StandardService {
 
         let inputWidth = KeyboardLayoutItem.Width.input
 
-        // Ряд 1
         let row1Items: [KeyboardLayoutItem] = row1.map { char in
             var item = layout.createIdealItem(for: .character(char))
             item.size.width = inputWidth
             return item
         }
 
-        // Ряд 2
         let row2Items: [KeyboardLayoutItem] = row2.map { char in
             var item = layout.createIdealItem(for: .character(char))
             item.size.width = inputWidth
             return item
         }
 
-        // Ряд 3: сохраняем родные кнопки Shift и Backspace, а буквы меняем на русские
         var row3Items: [KeyboardLayoutItem] = []
         if let shift = layout.itemRows[2].first {
             var s = shift
