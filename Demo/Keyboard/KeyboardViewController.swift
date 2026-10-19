@@ -72,16 +72,16 @@ private extension KeyboardViewController {
     /// Make demo-specific changes to your keyboard's state.
     func setupDemoState() {
         state.keyboardContext.locales = [
-            KeyboardLocale.english.locale,
-            KeyboardLocale.russian.locale
+            Keyboard.Locale.english.locale,
+            Keyboard.Locale.russian.locale
         ]
         /// 💡 Set up which locale to use to present locales.
         state.keyboardContext.localePresentationLocale = .current
         // 2. Поведение пробела и курсора
         state.keyboardSettings.spacebarLongPressBehavior = .moveInputCursor
-        state.keyboardSettings.spacebarMenuTrailing = .none // убираем лишние иконки с пробела
+        state.keyboardSettings.spacebarMenuTrailing = nil // убираем лишние иконки с пробела
 
         // 3. Автокомплит
-        state.autocompleteContext.isAutocorrectEnabled = true
+        state.autocompleteSettings.isAutocorrectEnabled = true
     }
 }
