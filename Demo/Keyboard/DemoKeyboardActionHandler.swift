@@ -46,8 +46,15 @@ class DemoKeyboardActionHandler: StandardKeyboardActionHandler {
         }
     }
 
-    // MARK: - Swipe-to-delete on backspace
 
+    // MARK: - Swipe-to-delete on backspace
+    /// Контроллер клавиатуры, из которого берём textDocumentProxy.
+    /// Выставляется в KeyboardViewController.
+    static weak var inputController: UIInputViewController?
+
+    private var textProxy: UITextDocumentProxy? {
+        Self.inputController?.textDocumentProxy
+    }    
     /// How many points of leftward drag trigger the next deletion step.
     private static let wordDeleteStepWidth: CGFloat = 25
 
@@ -130,7 +137,7 @@ private extension DemoKeyboardActionHandler {
      /// Deletes the word immediately before the cursor, including any
     /// trailing whitespace right before it.
     func deleteCurrentWord() {
-        let proxy = keyboardContext.textInputProxy
+        guard let proxy = textProxy else { return }
         guard var text = proxy.documentContextBeforeInput, !text.isEmpty else {
             return proxy.deleteBackward()
         }
@@ -153,7 +160,7 @@ private extension DemoKeyboardActionHandler {
     /// `.`, `!`, `?` or newline before the cursor), or to the start
     /// of the text if there is no earlier sentence boundary.
     func deleteCurrentSentence() {
-        let proxy = keyboardContext.textInputProxy
+        guard let proxy = textProxy else { return }
         guard var text = proxy.documentContextBeforeInput, !text.isEmpty else {
             return proxy.deleteBackward()
         }
