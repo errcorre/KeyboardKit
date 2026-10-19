@@ -40,7 +40,7 @@ class DemoKeyboardActionHandler: StandardKeyboardActionHandler {
         for gesture: Keyboard.Gesture,
         on action: KeyboardAction
     ) -> KeyboardAction.GestureAction? {
-        // Переключение En <-> Ru по тапу на глобус
+        // Мгновенное переключение языков En <-> Ru по тапу на глобус
         if gesture == .release, action == .nextKeyboard || action == .nextLocale {
             return { [weak self] _ in
                 guard let context = self?.keyboardContext else { return }
