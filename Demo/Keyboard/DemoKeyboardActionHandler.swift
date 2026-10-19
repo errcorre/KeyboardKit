@@ -40,14 +40,19 @@ class DemoKeyboardActionHandler: StandardKeyboardActionHandler {
         for gesture: Keyboard.Gesture,
         on action: KeyboardAction
     ) -> KeyboardAction.GestureAction? {
+        // Переключение En <-> Ru по тапу на глобус
+        if gesture == .release, action == .nextKeyboard || action == .nextLocale {
+            return { [weak self] _ in
+                guard let context = self?.keyboardContext else { return }
+                context.selectNextLocale()
+            }
+        }
+
         let standard = super.action(for: gesture, on: action)
         switch gesture {
-        case .longPress: 
-            return longPressAction(for: action) ?? standard
-        case .release: 
-            return releaseAction(for: action) ?? standard
-        default: 
-            return standard
+        case .longPress: return longPressAction(for: action) ?? standard
+        case .release: return releaseAction(for: action) ?? standard
+        default: return standard
         }
     }
 

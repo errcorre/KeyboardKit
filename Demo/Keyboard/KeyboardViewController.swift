@@ -29,20 +29,14 @@ class KeyboardViewController: KeyboardInputViewController {
     /// This function is called when the controller launches,
     /// and is where you can set up KeyboardKit for your app.
     override func viewWillSetupKeyboardKit() {
+        // Настраиваем стейт и сервисы сразу, без ожидания Pro лицензии
+        setupDemoServices()
+        setupDemoState()
 
-        // Set up the keyboard with the demo-specific app.
         setupKeyboardKit(
             for: .keyboardKitDemo,
-            hostApplicationResolver: pluginHostApplicationResolver  // <-- 💡 Host Application
-        ) { [weak self] result in
-            switch result {                                 // <-- 💡 Handle the license result
-            case .success:
-                self?.setupDemoServices()                   // <-- 💡 Set up demo-specific services.
-                self?.setupDemoState()                      // <-- 💡 Set up demo-specific state.
-            case .failure(let error):
-                print(error)                                // <-- 🚨 If this is called, the license failed.
-            }
-        }
+            hostApplicationResolver: pluginHostApplicationResolver
+        ) { _ in }
     }
 
     /// This function is called when the controller needs to

@@ -1,12 +1,6 @@
-//
-//  DemoKeyboardView.swift
-//  KeyboardPro
-//
-
 import KeyboardKit
 import SwiftUI
 
-/// Чистая нативная клавиатура Apple с системным AutocompleteToolbar
 struct DemoKeyboardView: View {
 
     var services: KeyboardServices
@@ -14,7 +8,11 @@ struct DemoKeyboardView: View {
 
     var body: some View {
         KeyboardView(
+            layout: .demoLayout(for: state.keyboardContext),
             services: services
         )
+        // Системные отступы оригинальной клавиатуры iOS
+        .padding(.horizontal, 3)
+        .padding(.bottom, 4)
     }
 }
