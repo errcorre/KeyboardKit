@@ -14,7 +14,8 @@ extension KeyboardLayout {
             return layout
         }
 
-        let isUpper = context.keyboardCase.isUppercased
+        // Проверяем состояние Shift / CapsLock
+        let isUpper = (context.keyboardCase == .uppercased || context.keyboardCase == .capsLocked)
 
         // 1-й ряд (11 клавиш)
         let row1 = isUpper
@@ -31,35 +32,37 @@ extension KeyboardLayout {
             ? ["Я", "Ч", "С", "М", "И", "Т", "Ь", "Б", "Ю"]
             : ["я", "ч", "с", "м", "и", "т", "ь", "б", "ю"]
 
+        let inputWidth = KeyboardLayoutItem.Width.input
+
         // Собираем первый ряд
-        let row1Items = row1.map { char -> KeyboardLayout.Item in
+        let row1Items: [KeyboardLayoutItem] = row1.map { char in
             var item = layout.createIdealItem(for: .character(char))
-            item.size.width = .input
+            item.size.width = inputWidth
             return item
         }
 
         // Собираем второй ряд
-        let row2Items = row2.map { char -> KeyboardLayout.Item in
+        let row2Items: [KeyboardLayoutItem] = row2.map { char in
             var item = layout.createIdealItem(for: .character(char))
-            item.size.width = .input
+            item.size.width = inputWidth
             return item
         }
 
         // Собираем третий ряд (Shift + 9 букв + Backspace)
-        var row3Items: [KeyboardLayout.Item] = []
+        var row3Items: [KeyboardLayoutItem] = []
         if let shift = layout.itemRows[2].first {
             var s = shift
-            s.size.width = .input
+            s.size.width = inputWidth
             row3Items.append(s)
         }
         for char in row3 {
             var item = layout.createIdealItem(for: .character(char))
-            item.size.width = .input
+            item.size.width = inputWidth
             row3Items.append(item)
         }
         if let backspace = layout.itemRows[2].last {
             var b = backspace
-            b.size.width = .input
+            b.size.width = inputWidth
             row3Items.append(b)
         }
 
