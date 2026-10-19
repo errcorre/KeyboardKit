@@ -72,10 +72,12 @@ private extension KeyboardViewController {
     /// Make demo-specific changes to your keyboard's state.
     func setupDemoState() {
         state.keyboardContext.locales = [
-            Keyboard.Locale.english.locale,
-            Keyboard.Locale.russian.locale
+            Locale(identifier: "en"),
+            Locale(identifier: "ru")
         ]
+        
         /// 💡 Set up which locale to use to present locales.
+        state.keyboardContext.locale = Locale(identifier: "en")
         state.keyboardContext.localePresentationLocale = .current
         // 2. Поведение пробела и курсора
         state.keyboardSettings.spacebarLongPressBehavior = .moveInputCursor
