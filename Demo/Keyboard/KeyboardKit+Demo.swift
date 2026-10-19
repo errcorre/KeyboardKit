@@ -10,7 +10,7 @@ extension KeyboardLayout {
 
         let inputWidth = KeyboardLayoutItem.Width.input
 
-        // 1. Русская раскладка (если активен русский язык и буквы)
+        // 1. Русская раскладка
         if context.locale.identifier.hasPrefix("ru") && context.keyboardType.isAlphabetic {
             let isUpper = (context.keyboardCase == .uppercased || context.keyboardCase == .capsLocked)
 
@@ -75,12 +75,11 @@ extension KeyboardLayout {
             layout.itemRows[bottomRowIndex] = bottomRow
         }
 
-        // 3. Подрезаем высоту ВСЕХ клавиш (включая пробел, буквы, цифры) на 6 pt
+        // 3. Вычитаем ровно 2 pt (6 px на экране @3x Retina)
         for rowIndex in layout.itemRows.indices {
             for itemIndex in layout.itemRows[rowIndex].indices {
-                // Вычитаем 6 пикселей из стандартной высоты строки
                 let currentHeight = layout.itemRows[rowIndex][itemIndex].size.height
-                layout.itemRows[rowIndex][itemIndex].size.height = max(currentHeight - 6, 36)
+                layout.itemRows[rowIndex][itemIndex].size.height = currentHeight - 2
             }
         }
 

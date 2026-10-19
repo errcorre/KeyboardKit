@@ -21,7 +21,7 @@ struct DemoKeyboardView: View {
                     )
                 }
 
-                // Надпись на пробеле
+                // Подпись на пробеле
                 if params.item.action == .space {
                     let isRussian = keyboardContext.locale.identifier.hasPrefix("ru")
                     return AnyView(
@@ -33,18 +33,12 @@ struct DemoKeyboardView: View {
 
                 return AnyView(params.view)
             },
-            buttonView: { params in
-                // Адаптируем скругление под уменьшенную высоту
-                params.view
-                    .cornerRadius(4.6)
-            },
+            buttonView: { $0.view },
             collapsedView: { $0.view },
             emojiKeyboard: { $0.view },
             toolbar: { _ in EmptyView() }
         )
-        // Сдвигаем на 4 пикселя вниз
-        .padding(.top, 4)
-        // Системный отступ по бокам
+        // Только боковые системные отступы (без сжимающего верха и низа)
         .padding(.horizontal, 3)
     }
 }
