@@ -6,15 +6,20 @@ struct DemoKeyboardView: View {
     var services: KeyboardServices
     var state: KeyboardState
 
-    // 💡 Благодаря этому SwiftUI сразу реагирует на нажатие Shift, 123 и Глобуса
+    // 💡 Реагирует на переключение Shift, 123 и языка
     @EnvironmentObject var keyboardContext: KeyboardContext
 
     var body: some View {
         KeyboardView(
             layout: .demoLayout(for: keyboardContext),
             services: services,
-            toolbar: { _ in EmptyView() } // полностью убирает панель подсказок
+            buttonContent: { $0.view },
+            buttonView: { $0.view },
+            collapsedView: { $0.view },
+            emojiKeyboard: { $0.view },
+            toolbar: { _ in EmptyView() } // полностью убираем панель автокомплита
         )
-        .padding(.horizontal, 3) // отступы только слева и справа
+        // Системный отступ только слева и справа
+        .padding(.horizontal, 3)
     }
 }
