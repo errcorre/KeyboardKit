@@ -137,7 +137,7 @@ private extension DemoKeyboardActionHandler {
      /// Deletes the word immediately before the cursor, including any
     /// trailing whitespace right before it.
     func deleteCurrentWord() {
-        guard let proxy = textProxy else { return }
+        guard let proxy = textProxy else { return 
         guard var text = proxy.documentContextBeforeInput, !text.isEmpty else {
             return proxy.deleteBackward()
         }
