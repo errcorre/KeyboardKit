@@ -59,3 +59,9 @@ jobs:
           name: KeyboardDemo-unsigned-ipa
           path: KeyboardDemo-unsigned.ipa
           retention-days: 7
+
+      - name: Inspect KeyboardKit API (temporary)
+        run: |
+          grep -rn "func setPreferredKeyboardCase" ~/Library/Developer/Xcode/DerivedData/*/SourcePackages/checkouts/KeyboardKit/Sources/ || true
+          grep -rn "protocol KeyboardBehavior" ~/Library/Developer/Xcode/DerivedData/*/SourcePackages/checkouts/KeyboardKit/Sources/ || true
+          grep -rln "preferredKeyboardCase" ~/Library/Developer/Xcode/DerivedData/*/SourcePackages/checkouts/KeyboardKit/Sources/ || true
