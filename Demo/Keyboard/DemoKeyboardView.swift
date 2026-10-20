@@ -28,16 +28,20 @@ struct DemoKeyboardView: View {
                             .font(.callout)
                     )
                 }
-                // 3. Все буквы рендерит сам KeyboardKit по родным стандартам Apple
-                else {
+                // 3. Аккуратный уменьшенный шрифт (22 pt)
+                else if case .character(let char) = params.item.action {
+                    AnyView(
+                        Text(char)
+                            .font(.system(size: 22, weight: .regular))
+                    )
+                } else {
                     AnyView(params.view)
                 }
             },
             buttonView: { params in
-                // Нативное скругление-сквиркл Apple + нижняя 3D-тень
+                // Ровно 8 pt (24 px из твоего замера) со сглаживанием Apple
                 params.view
-                    .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
-                    .shadow(color: Color.black.opacity(0.35), radius: 0, x: 0, y: 1)
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
             },
             collapsedView: { $0.view },
             emojiKeyboard: { $0.view },
