@@ -40,24 +40,9 @@ struct DemoKeyboardView: View {
                 }
             },
             buttonView: { params in
-                // Проверяем: для букв и пробела делаем клавишу светлее и живее
-                let isLetterOrSpace: Bool = {
-                    switch params.item.action {
-                    case .character, .space: return true
-                    default: return false
-                    }
-                }()
-
+                // Чистая кнопка без белой мути, со сквирклом и нижней 3D-тенью
                 params.view
-                    // Мягкий полупрозрачный слой свечения (Vibrancy-эффект Apple)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 5, style: .continuous)
-                            .fill(isLetterOrSpace ? Color.white.opacity(0.08) : Color.clear)
-                            .allowsHitTesting(false)
-                    )
-                    // Нативное скругление-сквиркл Apple
                     .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
-                    // Нижняя физическая 3D-тень клавиши
                     .shadow(color: Color.black.opacity(0.35), radius: 0, x: 0, y: 1)
             },
             collapsedView: { $0.view },
