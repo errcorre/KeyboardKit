@@ -8,6 +8,14 @@ class KeyboardViewController: KeyboardInputViewController {
         NSLog("__DEINIT__")
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        // Гарантируем, что при открытии клавиатуры или смене поля ввода
+        // регистр всегда принудительно сбрасывается в строчный
+        state.keyboardContext.keyboardCase = .lowercased
+    }
+
     override func viewWillSetupKeyboardKit() {
         // Принудительно настраиваем стейт и обработчики, не ожидая Pro-лицензии
         setupDemoServices()
@@ -46,7 +54,16 @@ private extension KeyboardViewController {
         ]
         state.keyboardContext.locale = Locale(identifier: "en")
         state.keyboardContext.localePresentationLocale = .current
+        
+        // --- БЛОК ОТКЛЮЧЕНИЯ АВТОКАПИТАЛИЗАЦИИ ---
+        // 1. Отключаем автокапитализацию KeyboardKit
         state.keyboardSettings.isAutocapitalizationEnabled = false
+        // 2. Игнорируем системные требования iOS к регистру для текстовых полей
+        state.keyboardContext.autocapitalizationTypeOverride = .none
+        // 3. Устанавливаем дефолтный регистр как нижний
+        state.keyboardContext.keyboardCase = .lowercased
+        // ----------------------------------------
+
         // Поведение пробела и курсора
         state.keyboardSettings.spacebarLongPressBehavior = .moveInputCursor
         state.keyboardSettings.spacebarMenuTrailing = nil
