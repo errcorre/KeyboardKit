@@ -59,7 +59,7 @@ private extension KeyboardViewController {
         // 1. Отключаем автокапитализацию KeyboardKit
         state.keyboardSettings.isAutocapitalizationEnabled = false
         // 2. Игнорируем системные требования iOS к регистру для текстовых полей
-        state.keyboardContext.autocapitalizationTypeOverride = .none
+        state.behaviorContext.autocapitalizationTypeOverride = .none
         // 3. Устанавливаем дефолтный регистр как нижний
         state.keyboardContext.keyboardCase = .lowercased
         // ----------------------------------------
