@@ -13,34 +13,28 @@ struct DemoKeyboardView: View {
             layout: .demoLayout(for: keyboardContext),
             services: services,
             buttonContent: { params in
-                // Иконка глобуса
                 if case .custom(let name) = params.item.action, name == "change_lang" {
-                    return AnyView(
+                    AnyView(
                         Image(systemName: "globe")
                             .font(.title3)
                     )
-                }
-
-                // Подпись на пробеле
-                if params.item.action == .space {
+                } else if params.item.action == .space {
                     let isRussian = keyboardContext.locale.identifier.hasPrefix("ru")
-                    return AnyView(
+                    AnyView(
                         Text(isRussian ? "пробел" : "space")
                             .font(.callout)
                             .opacity(0.6)
                     )
+                } else {
+                    AnyView(params.view)
                 }
-
-                return AnyView(params.view)
             },
             buttonView: { $0.view },
             collapsedView: { $0.view },
             emojiKeyboard: { $0.view },
             toolbar: { _ in EmptyView() }
         )
-        // 33 px между рядами из Фотошопа (33 / 3 = 11 pt)
-        .environment(\.keyboardRowSpacing, 11)
-        // Системный боковой отступ
+        // Системный отступ по краям
         .padding(.horizontal, 3)
     }
 }

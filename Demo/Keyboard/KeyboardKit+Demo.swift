@@ -9,8 +9,10 @@ extension KeyboardLayout {
         var layout = KeyboardLayout.standard(for: context)
 
         let inputWidth = KeyboardLayoutItem.Width.input
-        // Ровно 129px из Фотошопа (129 / 3 = 43 pt)
+        // 129px из Фотошопа (129 / 3 = 43 pt)
         let exactKeyHeight: CGFloat = 43
+        // 33px между рядами из Фотошопа (33 / 3 = 11 pt -> по 5.5 pt сверху и снизу клавиши)
+        let rowVerticalInset: CGFloat = 5.5
 
         // 1. Русская раскладка
         if context.locale.identifier.hasPrefix("ru") && context.keyboardType.isAlphabetic {
@@ -77,10 +79,12 @@ extension KeyboardLayout {
             layout.itemRows[bottomRowIndex] = bottomRow
         }
 
-        // 3. Выставляем фиксированную высоту РОВНО 43 pt для абсолютно всех клавиш
+        // 3. Выставляем фиксированную высоту 43 pt и отступ 11 pt между строками для всех клавиш
         for rowIndex in layout.itemRows.indices {
             for itemIndex in layout.itemRows[rowIndex].indices {
                 layout.itemRows[rowIndex][itemIndex].size.height = exactKeyHeight
+                layout.itemRows[rowIndex][itemIndex].insets.top = rowVerticalInset
+                layout.itemRows[rowIndex][itemIndex].insets.bottom = rowVerticalInset
             }
         }
 
