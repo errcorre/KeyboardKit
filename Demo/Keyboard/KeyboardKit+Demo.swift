@@ -10,13 +10,10 @@ extension KeyboardLayout {
         var layout = KeyboardLayout.standard(for: context)
 
         let inputWidth = KeyboardLayoutItem.Width.input
-        
-        // 33px между рядами (33 / 3 = 11 pt -> по 5.5 pt сверху и снизу)
-        let rowVerticalInset: CGFloat = 5.5
-        // Чтобы сама кнопка была 129px (43 pt), слот должен быть 43 + 11 = 54 pt!
-        let totalSlotHeight: CGFloat = 54
 
-        // 1. Русская раскладка
+        // 1. Русская раскладка — подменяем буквы, ширину клавиш не трогаем
+        //    отдельно от остальных (используем ту же .input-ширину, что и
+        //    у английских букв в этом же ряду, так пропорции не ломаются).
         if context.locale.identifier.hasPrefix("ru") && context.keyboardType.isAlphabetic {
             let isUpper = (context.keyboardCase == .uppercased || context.keyboardCase == .capsLocked)
 
@@ -46,9 +43,7 @@ extension KeyboardLayout {
 
             var row3Items: [KeyboardLayoutItem] = []
             if let shift = layout.itemRows[2].first {
-                var s = shift
-                s.size.width = inputWidth
-                row3Items.append(s)
+                row3Items.append(shift) // keep Apple's own Shift width/geometry
             }
             for char in row3 {
                 var item = layout.createIdealItem(for: .character(char))
@@ -56,14 +51,12 @@ extension KeyboardLayout {
                 row3Items.append(item)
             }
             if let backspace = layout.itemRows[2].last {
-                var b = backspace
-                b.size.width = inputWidth
-                row3Items.append(b)
+                row3Items.append(backspace) // keep Apple's own Backspace width/geometry
             }
             layout.itemRows[2] = row3Items
         }
 
-        // 2. Вставка ГЛОБУСА справа от 123
+        // 2. Вставка глобуса слева от пробела, справа от "123"
         if let bottomRowIndex = layout.itemRows.indices.last {
             var bottomRow = layout.itemRows[bottomRowIndex]
 
@@ -81,15 +74,8 @@ extension KeyboardLayout {
             layout.itemRows[bottomRowIndex] = bottomRow
         }
 
-        // 3. Выставляем геометрию: слот 54 pt - 11 pt отступов = РОВНО 43 pt (129 px) чистой кнопки!
-        for rowIndex in layout.itemRows.indices {
-            for itemIndex in layout.itemRows[rowIndex].indices {
-                layout.itemRows[rowIndex][itemIndex].size.height = totalSlotHeight
-                layout.itemRows[rowIndex][itemIndex].edgeInsets.top = rowVerticalInset
-                layout.itemRows[rowIndex][itemIndex].edgeInsets.bottom = rowVerticalInset
-            }
-        }
-
+        // Никакой ручной геометрии (высота/инсеты) — используем то, что уже
+        // честно посчитала .standard(for: context) для текущего устройства.
         return layout
     }
 }
