@@ -1,5 +1,6 @@
 import Foundation
 import KeyboardKit
+import UIKit
 
 extension KeyboardLayout {
 
@@ -79,12 +80,12 @@ extension KeyboardLayout {
             layout.itemRows[bottomRowIndex] = bottomRow
         }
 
-        // 3. Выставляем фиксированную высоту 43 pt и отступ 11 pt между строками для всех клавиш
+        // 3. Выставляем точную высоту (43 pt) и зазор между рядами (11 pt)
         for rowIndex in layout.itemRows.indices {
             for itemIndex in layout.itemRows[rowIndex].indices {
                 layout.itemRows[rowIndex][itemIndex].size.height = exactKeyHeight
-                layout.itemRows[rowIndex][itemIndex].insets.top = rowVerticalInset
-                layout.itemRows[rowIndex][itemIndex].insets.bottom = rowVerticalInset
+                layout.itemRows[rowIndex][itemIndex].edgeInsets.top = rowVerticalInset
+                layout.itemRows[rowIndex][itemIndex].edgeInsets.bottom = rowVerticalInset
             }
         }
 
