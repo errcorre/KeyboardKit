@@ -46,7 +46,7 @@ private extension KeyboardViewController {
         ]
         state.keyboardContext.locale = Locale(identifier: "en")
         state.keyboardContext.localePresentationLocale = .current
-        state.keyboardContext.autocapitalizationTypeOverride = .none
+        state.keyboardSettings.isAutocapitalizationEnabled = false
         // Поведение пробела и курсора
         state.keyboardSettings.spacebarLongPressBehavior = .moveInputCursor
         state.keyboardSettings.spacebarMenuTrailing = nil
