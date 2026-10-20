@@ -11,9 +11,7 @@ extension KeyboardLayout {
 
         let inputWidth = KeyboardLayoutItem.Width.input
 
-        // 1. Русская раскладка — подменяем буквы, геометрию берём ту же,
-        //    что и у английских букв в этом же ряду (через createIdealItem),
-        //    так инсеты и пропорции остаются такими же, как у стандартной раскладки.
+        // 1. Русская раскладка
         if context.locale.identifier.hasPrefix("ru") && context.keyboardType.isAlphabetic {
             let isUpper = (context.keyboardCase == .uppercased || context.keyboardCase == .capsLocked)
 
@@ -43,7 +41,7 @@ extension KeyboardLayout {
 
             var row3Items: [KeyboardLayoutItem] = []
             if let shift = layout.itemRows[2].first {
-                row3Items.append(shift) // keep Apple's own Shift width/geometry
+                row3Items.append(shift)
             }
             for char in row3 {
                 var item = layout.createIdealItem(for: .character(char))
@@ -51,12 +49,12 @@ extension KeyboardLayout {
                 row3Items.append(item)
             }
             if let backspace = layout.itemRows[2].last {
-                row3Items.append(backspace) // keep Apple's own Backspace width/geometry
+                row3Items.append(backspace)
             }
             layout.itemRows[2] = row3Items
         }
 
-        // 2. Вставка штатного переключателя локали (globe) слева от пробела.
+        // 2. Штатный переключатель локали (globe) слева от пробела.
         if let bottomRowIndex = layout.itemRows.indices.last {
             var bottomRow = layout.itemRows[bottomRowIndex]
 
@@ -71,6 +69,17 @@ extension KeyboardLayout {
             }
 
             layout.itemRows[bottomRowIndex] = bottomRow
+        }
+
+        // 3. Точечная правка межрядного зазора: +1pt сверху и снизу у каждой
+        //    клавиши (итого +2pt зазора между соседними рядами), чтобы
+        //    совпасть с замеренными 11pt оригинала вместо 9pt по умолчанию.
+        //    Ширину, высоту слота и прочую геометрию не трогаем.
+        for rowIndex in layout.itemRows.indices {
+            for itemIndex in layout.itemRows[rowIndex].indices {
+                layout.itemRows[rowIndex][itemIndex].edgeInsets.top += 1
+                layout.itemRows[rowIndex][itemIndex].edgeInsets.bottom += 1
+            }
         }
 
         return layout

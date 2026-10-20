@@ -14,17 +14,15 @@ struct DemoKeyboardView: View {
             services: services,
             buttonContent: { params in
                 switch params.item.action {
-                case .character:
-                    // Шрифт 25pt — только для букв, не для иконок Shift/Backspace.
+                case .character where keyboardContext.keyboardType.isAlphabetic:
+                    // Увеличенный шрифт — только для букв алфавитной раскладки,
+                    // цифры/символы остаются со стандартным (меньшим) размером.
                     AnyView(params.view.font(.system(size: 25, weight: .regular)))
 
                 case .nextLocale:
-                    // Глобус вместо текстового "EN"/"RU" по умолчанию.
                     AnyView(Image(systemName: "globe").font(.system(size: 17)))
 
                 case .space:
-                    // Пустой пробел + маленькая подпись локали в правом нижнем углу,
-                    // как у системной клавиатуры.
                     AnyView(
                         params.view.overlay(alignment: .bottomTrailing) {
                             Text(keyboardContext.locale.identifier.hasPrefix("ru") ? "ру" : "A")
@@ -36,7 +34,6 @@ struct DemoKeyboardView: View {
                     )
 
                 default:
-                    // Shift, Backspace, 123 и всё остальное — без изменений.
                     AnyView(params.view)
                 }
             },
@@ -45,8 +42,12 @@ struct DemoKeyboardView: View {
             },
             collapsedView: { $0.view },
             emojiKeyboard: { $0.view },
-            toolbar: { params in params.view }
+            toolbar: { params in
+                // Компактнее, чем дефолтная высота — подбор на глаз,
+                // подвинем по следующему скрину, если нужно.
+                params.view.frame(maxHeight: 34)
+            }
         )
-        .padding(.horizontal, 6.5)
+        .padding(.horizontal, 3.5)
     }
 }
