@@ -13,34 +13,30 @@ struct DemoKeyboardView: View {
             layout: .demoLayout(for: keyboardContext),
             services: services,
             buttonContent: { params in
-                // Иконка глобуса на кастомной кнопке переключения языка.
-                if case .custom(let name) = params.item.action, name == "change_lang" {
-                    AnyView(
-                        Image(systemName: "globe")
-                            .font(.system(size: 17))
-                    )
-                }
-                // Нативная надпись на пробеле в зависимости от языка.
-                else if params.item.action == .space {
-                    let isRussian = keyboardContext.locale.identifier.hasPrefix("ru")
-                    AnyView(
-                        Text(isRussian ? "пробел" : "space")
-                            .font(.callout)
-                    )
-                }
-                // Всё остальное — стандартный рендер библиотеки, без
-                // кастомного шрифта. Он сам адаптирует размер под кнопку
-                // и под устройство так же, как это делает системная клавиатура.
-                else {
+                if params.item.action == .space {
+                    // Пустой пробел, как у системной клавиатуры — без надписи.
+                    AnyView(params.view)
+                } else {
                     AnyView(params.view)
                 }
             },
             buttonView: { $0.view },
             collapsedView: { $0.view },
             emojiKeyboard: { $0.view },
-            toolbar: { _ in EmptyView() }
+            toolbar: { params in params.view }
         )
-        // Никакого дополнительного .padding(.horizontal, ...) — системные
-        // отступы уже заложены внутри .standard(for:) и buttonView.
+        // Замеренный симметричный внешний отступ клавиатуры: ~6.5pt с каждой стороны.
+        .padding(.horizontal, 6.5)
+        // Точная стилизация кнопок под замеренные значения оригинала.
+        .keyboardButtonStyle { params in
+            var style = Keyboard.ButtonStyle.standard(
+                for: params.context,
+                action: params.item.action,
+                isPressed: params.isPressed
+            )
+            style.cornerRadius = 8   // 24px / 3
+            style.font = .init(.system(size: 25, weight: .regular)) // расчёт из x-height "n"
+            return style
+        }
     }
 }

@@ -11,9 +11,9 @@ extension KeyboardLayout {
 
         let inputWidth = KeyboardLayoutItem.Width.input
 
-        // 1. Русская раскладка — подменяем буквы, ширину клавиш не трогаем
-        //    отдельно от остальных (используем ту же .input-ширину, что и
-        //    у английских букв в этом же ряду, так пропорции не ломаются).
+        // 1. Русская раскладка — подменяем буквы, геометрию берём ту же,
+        //    что и у английских букв в этом же ряду (через createIdealItem),
+        //    так инсеты и пропорции остаются такими же, как у стандартной раскладки.
         if context.locale.identifier.hasPrefix("ru") && context.keyboardType.isAlphabetic {
             let isUpper = (context.keyboardCase == .uppercased || context.keyboardCase == .capsLocked)
 
@@ -56,17 +56,16 @@ extension KeyboardLayout {
             layout.itemRows[2] = row3Items
         }
 
-        // 2. Вставка глобуса слева от пробела, справа от "123"
+        // 2. Вставка штатного переключателя локали (globe) слева от пробела.
         if let bottomRowIndex = layout.itemRows.indices.last {
             var bottomRow = layout.itemRows[bottomRowIndex]
 
             bottomRow.removeAll {
-                if case .custom(let name) = $0.action, name == "change_lang" { return true }
-                return $0.action == .nextKeyboard || $0.action == .nextLocale
+                $0.action == .nextKeyboard || $0.action == .nextLocale
             }
 
             if let spaceIndex = bottomRow.firstIndex(where: { $0.action == .space }) {
-                var globeItem = layout.createIdealItem(for: .custom(named: "change_lang"))
+                var globeItem = layout.createIdealItem(for: .nextLocale)
                 globeItem.size.width = inputWidth
                 bottomRow.insert(globeItem, at: spaceIndex)
             }
@@ -74,8 +73,6 @@ extension KeyboardLayout {
             layout.itemRows[bottomRowIndex] = bottomRow
         }
 
-        // Никакой ручной геометрии (высота/инсеты) — используем то, что уже
-        // честно посчитала .standard(for: context) для текущего устройства.
         return layout
     }
 }
