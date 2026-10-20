@@ -10,10 +10,11 @@ extension KeyboardLayout {
         var layout = KeyboardLayout.standard(for: context)
 
         let inputWidth = KeyboardLayoutItem.Width.input
-        // 129px из Фотошопа (129 / 3 = 43 pt)
-        let exactKeyHeight: CGFloat = 43
-        // 33px между рядами из Фотошопа (33 / 3 = 11 pt -> по 5.5 pt сверху и снизу клавиши)
+        
+        // 33px между рядами (33 / 3 = 11 pt -> по 5.5 pt сверху и снизу)
         let rowVerticalInset: CGFloat = 5.5
+        // Чтобы сама кнопка была 129px (43 pt), слот должен быть 43 + 11 = 54 pt!
+        let totalSlotHeight: CGFloat = 54
 
         // 1. Русская раскладка
         if context.locale.identifier.hasPrefix("ru") && context.keyboardType.isAlphabetic {
@@ -80,10 +81,10 @@ extension KeyboardLayout {
             layout.itemRows[bottomRowIndex] = bottomRow
         }
 
-        // 3. Выставляем точную высоту (43 pt) и зазор между рядами (11 pt)
+        // 3. Выставляем геометрию: слот 54 pt - 11 pt отступов = РОВНО 43 pt (129 px) чистой кнопки!
         for rowIndex in layout.itemRows.indices {
             for itemIndex in layout.itemRows[rowIndex].indices {
-                layout.itemRows[rowIndex][itemIndex].size.height = exactKeyHeight
+                layout.itemRows[rowIndex][itemIndex].size.height = totalSlotHeight
                 layout.itemRows[rowIndex][itemIndex].edgeInsets.top = rowVerticalInset
                 layout.itemRows[rowIndex][itemIndex].edgeInsets.bottom = rowVerticalInset
             }
