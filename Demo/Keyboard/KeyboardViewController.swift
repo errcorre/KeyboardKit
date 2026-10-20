@@ -55,12 +55,11 @@ private extension KeyboardViewController {
         state.keyboardContext.locale = Locale(identifier: "en")
         state.keyboardContext.localePresentationLocale = .current
         
-        // --- БЛОК ОТКЛЮЧЕНИЯ АВТОКАПИТАЛИЗАЦИИ ---
-        // 1. Отключаем автокапитализацию KeyboardKit
+        // --- НАСТРОЙКА СТРОЧНОГО РЕГИСТРА (Для KeyboardKit 11.0.3) ---
+        // 1. Отключаем автоматический сдвиг регистра фреймворка
         state.keyboardSettings.isAutocapitalizationEnabled = false
-        // 2. Игнорируем системные требования iOS к регистру для текстовых полей
-        state.behaviorContext.autocapitalizationTypeOverride = .none
-        // 3. Устанавливаем дефолтный регистр как нижний
+        
+        // 2. Устанавливаем дефолтный регистр как нижний
         state.keyboardContext.keyboardCase = .lowercased
         // ----------------------------------------
 
