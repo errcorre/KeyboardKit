@@ -32,16 +32,16 @@ jobs:
             -scheme Demo \
             -derivedDataPath build/DerivedData
 
-      - name: Inspect KeyboardKit API (temporary)
+       - name: Inspect KeyboardKit API (temporary)
         run: |
-          echo "--- Searching for checkout folders ---"
-          find build/DerivedData -maxdepth 5 -iname "*keyboardkit*" -type d || true
+          echo "--- Searching for .swiftinterface files ---"
+          find build/DerivedData/SourcePackages/artifacts/keyboardkit -iname "*.swiftinterface" || true
           echo "--- Searching for setPreferredKeyboardCase ---"
-          grep -rn "setPreferredKeyboardCase" build/DerivedData --include="*.swift" || true
+          grep -rn "setPreferredKeyboardCase" build/DerivedData/SourcePackages/artifacts/keyboardkit --include="*.swiftinterface" || true
           echo "--- Searching for KeyboardBehavior protocol ---"
-          grep -rn "protocol KeyboardBehavior" build/DerivedData --include="*.swift" || true
-          echo "--- Files mentioning preferredKeyboardCase ---"
-          grep -rln "preferredKeyboardCase" build/DerivedData --include="*.swift" || true
+          grep -rn "protocol KeyboardBehavior" build/DerivedData/SourcePackages/artifacts/keyboardkit --include="*.swiftinterface" || true
+          echo "--- Searching for preferredKeyboardCase anywhere ---"
+          grep -rn "preferredKeyboardCase" build/DerivedData/SourcePackages/artifacts/keyboardkit --include="*.swiftinterface" || true
 
       - name: Build for device (Release, unsigned)
         run: |
