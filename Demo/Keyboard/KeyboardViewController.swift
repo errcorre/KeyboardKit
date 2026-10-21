@@ -8,16 +8,7 @@ class KeyboardViewController: KeyboardInputViewController {
         NSLog("__DEINIT__")
     }
 
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        
-        // Гарантируем, что при открытии клавиатуры или смене поля ввода
-        // регистр всегда принудительно сбрасывается в строчный
-        state.keyboardContext.keyboardCase = .lowercased
-    }
-
     override func viewWillSetupKeyboardKit() {
-        // Принудительно настраиваем стейт и обработчики, не ожидая Pro-лицензии
         setupDemoServices()
         setupDemoState()
 
@@ -35,6 +26,10 @@ class KeyboardViewController: KeyboardInputViewController {
             )
         }
     }
+
+    override func setPreferredKeyboardCase() {
+        // Намеренно пусто — отключает автоматическую смену регистра.
+    }
 }
 
 private extension KeyboardViewController {
@@ -47,23 +42,13 @@ private extension KeyboardViewController {
     }
 
     func setupDemoState() {
-        // Доступные локали: Английский и Русский
         state.keyboardContext.locales = [
             Locale(identifier: "en"),
             Locale(identifier: "ru")
         ]
         state.keyboardContext.locale = Locale(identifier: "en")
         state.keyboardContext.localePresentationLocale = .current
-        
-        // --- НАСТРОЙКА СТРОЧНОГО РЕГИСТРА (Для KeyboardKit 11.0.3) ---
-        // 1. Отключаем автоматический сдвиг регистра фреймворка
-        state.keyboardSettings.isAutocapitalizationEnabled = false
-        
-        // 2. Устанавливаем дефолтный регистр как нижний
-        state.keyboardContext.keyboardCase = .lowercased
-        // ----------------------------------------
 
-        // Поведение пробела и курсора
         state.keyboardSettings.spacebarLongPressBehavior = .moveInputCursor
         state.keyboardSettings.spacebarMenuTrailing = nil
     }
