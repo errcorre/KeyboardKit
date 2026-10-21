@@ -32,7 +32,7 @@ jobs:
             -scheme Demo \
             -derivedDataPath build/DerivedData
 
-       - name: Inspect KeyboardKit API (temporary)
+      - name: Inspect KeyboardKit API (temporary)
         run: |
           echo "--- Searching for .swiftinterface files ---"
           find build/DerivedData/SourcePackages/artifacts/keyboardkit -iname "*.swiftinterface" || true
