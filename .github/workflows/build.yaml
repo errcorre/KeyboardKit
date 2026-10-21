@@ -17,6 +17,7 @@ jobs:
       - name: Select recent Xcode
         run: sudo xcode-select -s /Applications/Xcode_26.4.1.app
 
+      # Кэшируем библиотеки KeyboardKit, чтобы не качать заново
       - name: Cache SPM dependencies
         uses: actions/cache@v4
         with:
@@ -25,24 +26,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-spm-
 
-      - name: Resolve SwiftPM dependencies
-        run: |
-          xcodebuild -resolvePackageDependencies \
-            -project Demo/Demo.xcodeproj \
-            -scheme Demo \
-            -derivedDataPath build/DerivedData
-
-      - name: Inspect KeyboardKit API (temporary)
-        run: |
-          echo "--- Searching for .swiftinterface files ---"
-          find build/DerivedData/SourcePackages/artifacts/keyboardkit -iname "*.swiftinterface" || true
-          echo "--- Searching for setPreferredKeyboardCase ---"
-          grep -rn "setPreferredKeyboardCase" build/DerivedData/SourcePackages/artifacts/keyboardkit --include="*.swiftinterface" || true
-          echo "--- Searching for KeyboardBehavior protocol ---"
-          grep -rn "protocol KeyboardBehavior" build/DerivedData/SourcePackages/artifacts/keyboardkit --include="*.swiftinterface" || true
-          echo "--- Searching for preferredKeyboardCase anywhere ---"
-          grep -rn "preferredKeyboardCase" build/DerivedData/SourcePackages/artifacts/keyboardkit --include="*.swiftinterface" || true
-
+      # Сборка сразу под девайс (Release + отключение индексатора)
       - name: Build for device (Release, unsigned)
         run: |
           set -o pipefail
@@ -66,6 +50,8 @@ jobs:
           rm -rf Payload KeyboardDemo-unsigned.ipa
           mkdir -p Payload
           cp -R "$APP_PATH" Payload/
+          zip -qr KeyboardDemo-unsigned.ipa Payload
+          rm -rf Payload
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
@@ -73,3 +59,5 @@ jobs:
           name: KeyboardDemo-unsigned-ipa
           path: KeyboardDemo-unsigned.ipa
           retention-days: 7
+
+      
